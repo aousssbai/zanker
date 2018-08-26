@@ -8,12 +8,13 @@ import Input from 'reactstrap/lib/Input';
 import Row from 'reactstrap/lib/Row';
 import Col from 'reactstrap/lib/Col';
 import { lazyInject } from '../Injections';
-import BaseManager, { SyncDataListener } from '../manager/BaseManager';
+import BaseManager from '../manager/BaseManager';
 import ClientDataList from '../components/lists/SimplePairList';
 import { RouteComponentProps } from 'react-router';
 import ButtonGroup from 'reactstrap/lib/ButtonGroup';
 import Pair from '../models/Pair';
 import Web3 from 'web3';
+import { SearchRequest, Offer } from 'bitclave-base';
 
 const ethUtil = require('ethereumjs-util');
 
@@ -25,8 +26,6 @@ interface State {
     inputValue: string;
     ethAddress: string;
     ethSignature: string;
-    numberRequests: number;
-    numberResponses: number;
     clientDataRefreshhTrigger: number;
     clientData: Array<Pair<string, string>>;
 }
@@ -37,8 +36,6 @@ window.addEventListener('load', function () {
     if (typeof window.web3 !== 'undefined') {
         // Use Mist/MetaMask's provider.
         web3 = new Web3(window.web3.currentProvider);
-
-
         console.log('Injected web3 detected.');
     }
 });
@@ -65,32 +62,34 @@ export default class Dashboard extends React.Component<Props, State> {
     componentDidMount() {
         this.getDataList();
         this.state.ethSignature = '';
-
         g_Dashboard = this;
     }
 
     render() {
         return (
             <div className="text-white h-100">
-                <Button className="m-2 float-right" color="danger" size="sm" onClick={e => this.onLogoutClick()}>
+                <Button className="m-2 float-right" color="danger" size="sm" onClick={() => this.onLogoutClick()}>
                     Logout
                 </Button>
 
                 <ButtonGroup className="m-2 btn-group-toggle justify-content-center">
-                    <Button color="primary" onClick={e => this.onDataPermissionsClick()}>
+                    <Button color="primary" onClick={() => this.onDataPermissionsClick()}>
                         Data permissions
                     </Button>{''}
-                    <Button color="primary" onClick={e => this.onCreateRequestClick()}>
+                    <Button color="primary" onClick={() => this.onCreateRequestClick()}>
                         Request permissions
                     </Button>
-                    <Button color="primary" onClick={e => this.onSearchRequestsClick()}>
+                    <Button color="primary" onClick={() => this.onSearchRequestsClick()}>
                         Search Requests
                     </Button>
-                    <Button color="primary" onClick={e => this.onOffersClick()}>
+                    <Button color="primary" onClick={() => this.onOffersClick()}>
                         Offers
                     </Button>
-                    <Button color="primary" onClick={e => this.onMatchClick()}>
+                    <Button color="primary" onClick={() => this.onMatchClick()}>
                         Match Search And Offer
+                    </Button>
+                    <Button color="primary" onClick={() => this.onRankingClick()}>
+                        View my ranking
                     </Button>
                 </ButtonGroup>
 
@@ -124,23 +123,23 @@ export default class Dashboard extends React.Component<Props, State> {
                                 <Row><p/></Row>
                                 <Row>
                                     <Col xs="3" sm="3">
-                                        <Button color="primary" onClick={e => this.onSetEthSignature()}>
+                                        <Button color="primary" onClick={() => this.onSetEthSignature()}>
                                             Sign w/Web3
                                         </Button>
                                     </Col>
                                     <Col xs="3" sm="3">
-                                        <Button color="primary" onClick={e => this.onSetEthAddress()}>
+                                        <Button color="primary" onClick={() => this.onSetEthAddress()}>
                                             Set Single
                                         </Button>
                                     </Col>
 
                                     <Col xs="3" sm="3">
-                                        <Button color="primary" onClick={e => this.onVerifyWallets()}>
+                                        <Button color="primary" onClick={() => this.onVerifyWallets()}>
                                             Verify
                                         </Button>
                                     </Col>
                                     <Col xs="3" sm="3">
-                                        <Button color="primary" onClick={e => this.onSignWallets()}>
+                                        <Button color="primary" onClick={() => this.onSignWallets()}>
                                             Sign Wallets
                                         </Button>
                                     </Col>
@@ -165,7 +164,7 @@ export default class Dashboard extends React.Component<Props, State> {
                                         />
                                     </Col>
                                     <Col sm="4">
-                                        <Button color="primary" onClick={e => this.onSetClick()}>
+                                        <Button color="primary" onClick={() => this.onSetClick()}>
                                             Set
                                         </Button>
                                     </Col>
@@ -177,7 +176,7 @@ export default class Dashboard extends React.Component<Props, State> {
                                 data={this.state.clientData}
                                 onDeleteClick={null}
                             />
-                            <Button color="primary" className="m-2 float-right" onClick={e => this.onSaveClick()}>
+                            <Button color="primary" className="m-2 float-right" onClick={() => this.onSaveClick()}>
                                 Save
                             </Button>
                         </Form>
@@ -192,6 +191,7 @@ export default class Dashboard extends React.Component<Props, State> {
             .then(data => {
                 try {
                     this.state.clientData = [];
+                    
                     data.forEach((value, key) => {
                         this.state.clientData.push(new Pair(key, value));
                     });
@@ -230,10 +230,6 @@ export default class Dashboard extends React.Component<Props, State> {
         history.push('permissions');
     }
 
-    private onResponsesClick() {
-        const {history} = this.props;
-        history.push('responses');
-    }
 
     private onCreateRequestClick() {
         const {history} = this.props;
@@ -255,15 +251,27 @@ export default class Dashboard extends React.Component<Props, State> {
         history.push('search-match');
     }
 
+    private onRankingClick()  {
+        const {history} = this.props;
+        history.push('ranking');
+    }
+
     private onSaveClick() {
         const map: Map<string, string> = new Map();
 
         this.state.clientData.forEach(item => {
             map.set(item.key, item.value);
         });
+        
+        const infoScale = this.recalculateInfoScale(this.state.clientData);
+        const historyScale = this.recalculateHistoryScale();
+        console.log("Info "+ infoScale);
+        console.log("History "+historyScale);
+        const newRank = infoScale/2 + historyScale/2;
+        localStorage.setItem('rank', newRank.toString());
 
         this.baseManager.saveData(map)
-            .then(result => alert('data has been saved'))
+            .then(() => alert('data has been saved'))
             .catch(e => alert('Something went wrong! data not saved! =(') + e);
     }
 
@@ -371,7 +379,6 @@ export default class Dashboard extends React.Component<Props, State> {
                 'ethAddr': signingAddr
             }
         );
-        var signedMessage = '';
         if (typeof web3 != 'undefined') {
             // alert('onSetEthSignature');
             var msg = ethUtil.bufferToHex(new Buffer(thisMessage, 'utf8'));
@@ -389,19 +396,11 @@ export default class Dashboard extends React.Component<Props, State> {
                 // if (err) return $scope.notifier.danger(err)
                 // if (result.error) return $scope.notifier.danger(result.error)
                 sig = result.result;
-                signedMessage = JSON.stringify({
-                    address: signingAddr,
-                    msg: thisMessage,
-                    sig: sig,
-                    version: '3',
-                    signer: 'web3'
-                }, null, 2);
                 // alert('Successfully Signed Message with ' + signingAddr + signedMessage);
                 g_Dashboard.setState({ethSignature: sig});
                 g_Dashboard.setState({ethAddress: signingAddr});
             });
         }
-
     }
 
     private onSetClick() {
@@ -414,20 +413,44 @@ export default class Dashboard extends React.Component<Props, State> {
             return;
         }
         const pos = this.state.clientData.findIndex(model => model.key === inputKey);
-
         if (pos >= 0) {
             this.state.clientData[pos].value = inputValue;
         } else {
             this.state.clientData.push(new Pair(inputKey, inputValue));
         }
-
         this.setState({inputKey: '', inputValue: ''});
     }
-
-    private onDeleteClick(key: string) {
-        this.state.clientData = this.state.clientData.filter(model => model.key !== key);
-
-        this.setState({});
+    
+    private recalculateInfoScale(clientData: Pair<string, string>[]): number {
+        var scale = 0;
+        const rewardSmall = 0.05;
+        const maxScale = 2.5;
+        for (let entry of clientData) {
+            const key = entry.key.toLowerCase();
+            if (key == 'age') {
+                scale += 0.4;
+            } else if (key == 'address') {
+                scale += 0.4;
+            } else if (key == 'status') {
+                scale += 0.1;
+            } else if (key == 'payslips') {
+                scale += 0.4;
+            } else if (key == 'cs') {
+                scale += 0.2;
+            } else if (key == 'occupation') {
+                scale += 0.5;
+            } else scale += rewardSmall;
+        }
+        return scale < maxScale ? scale : maxScale;
     }
+
+    private recalculateHistoryScale(): number {
+        let requestNu = localStorage.getItem('requests');
+        requestNu = requestNu == null ? '1' : requestNu;
+        let offerNu = localStorage.getItem('offers');
+        offerNu = offerNu == null ? '1' : offerNu;
+        return Number(requestNu) / Number(offerNu);
+    }
+
 
 }

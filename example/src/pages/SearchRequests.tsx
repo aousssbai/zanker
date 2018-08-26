@@ -62,6 +62,7 @@ export default class SearchRequests extends React.Component<Props, State> {
 
     private onSyncData(result: Array<SearchRequest>) {
         this.setState({requests: result});
+        localStorage.setItem('requests', result.length.toString());
     }
 
     private onBackClick() {

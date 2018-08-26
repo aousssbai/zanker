@@ -57,6 +57,7 @@ export default class Offers extends React.Component<Props, State> {
 
     private onSyncData(result: Array<Offer>) {
         this.setState({offersList: result});
+        localStorage.setItem('offers', result.length.toString());
     }
 
     private onBackClick() {

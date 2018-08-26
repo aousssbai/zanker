@@ -104,6 +104,7 @@ export default class CreateSearchRequest extends React.Component<Props, State> {
         this.tags.forEach(item => {
             map.set(item.key, item.value);
         });
+        map.set('rank', this.getRanking());
 
         this.baseManager
             .getSearchManager()
@@ -112,6 +113,11 @@ export default class CreateSearchRequest extends React.Component<Props, State> {
                 alert('data has been saved');
                 this.onBackClick();
             }).catch(e => alert('Something went wrong! data not saved! =('));
+    }
+
+    private getRanking(): string {
+        const rank = localStorage.getItem('rank');
+        return rank == null ? '0' : rank;
     }
 
     private onSetClick() {

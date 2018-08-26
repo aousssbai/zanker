@@ -13,6 +13,7 @@ import CreateOffer from './pages/CreateOffer';
 import SearchOfferMatch from './pages/SearchOfferMatch';
 import DataPermissions from './pages/DataPermissions';
 import SearchResult from './pages/SearchResult';
+import Ranking from './pages/Ranking';
 
 ReactDOM.render(
     <HashRouter>
@@ -27,6 +28,8 @@ ReactDOM.render(
             <Route path="/offers/" component={Offers}/>
             <Route path="/create-offer/" component={CreateOffer}/>
             <Route path="/search-match/" component={SearchOfferMatch}/>
+            <Route path="/ranking/" component={Ranking}/>
+
         </div>
     </HashRouter>,
     document.getElementById('root') as HTMLElement
