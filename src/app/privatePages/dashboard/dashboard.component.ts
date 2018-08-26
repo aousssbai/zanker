@@ -15,6 +15,7 @@ import { DisplayOptions } from './../../models/displayOptions';
 export class DashboardComponent implements OnInit {
   karma: Number;
   displayOptions: DisplayOptions;
+  rank: Number;
 
   constructor(
     private baseAuthService: BaseAuthService,
@@ -31,6 +32,7 @@ export class DashboardComponent implements OnInit {
 
     this.displayOptions =  this.baseAuthService.allData.displayOptions;
     this.karma = this.baseAuthService.allData.karma;
+    this.rank = this.baseAuthService.allData.rank;
   }
 
 }

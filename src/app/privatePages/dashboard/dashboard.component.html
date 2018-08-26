@@ -22,6 +22,27 @@
     </div>
     <div class="dashboard-column">
 
+      <div class="dashboard-card">
+        <div class="title-dashboard-card">Rank</div>
+        <mat-card>
+
+          <div class="wrapper-score-container">
+            <div class="score-container">
+              <span class="score">{{rank}}</span>
+              <span class="dashboard-regular-text total">/&nbsp;10</span>
+            </div>
+            <a href="javascript:void(0);" class="question_in_circle"></a>
+          </div>
+
+          <p class="dashboard-regular-text">
+            You are unreliable. Sorry.
+          </p>
+        </mat-card>
+      </div>
+
+    </div>
+  <div class="dashboard-column">
+
       <div *ngIf="displayOptions.wallet" class="dashboard-card wallet_box">
         <div class="title-dashboard-card">WALLET</div>
         <mat-card>

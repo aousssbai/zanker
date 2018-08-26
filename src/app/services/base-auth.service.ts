@@ -13,6 +13,7 @@ export class BaseAuthService {
   data: Map<string, string> = new Map<string, string>(); // raw data, the response from server
   displayOptions: DisplayOptions;
   karma: Number;
+  rank: Number;
   widget: any;
   authorized = false;
   private _publicKey = '';
@@ -24,7 +25,8 @@ export class BaseAuthService {
   get allData() {
     return {
       displayOptions: this.displayOptions,
-      karma: this.karma
+      karma: this.karma,
+      rank: this.rank
     };
   }
   constructor( private router: Router, private spinner: SpinnerService) {
@@ -106,6 +108,7 @@ export class BaseAuthService {
         }
         this._extractDisplayOptions(result);
         this._extractKarma(result);
+        this._extractRank(result);
 
         this.spinner.stop();
         return this.allData;
@@ -154,6 +157,25 @@ export class BaseAuthService {
     }
   }
 
+  _extractRank(response) {
+    if (response && response.size > 0) {
+      const keys = Array.from(response.keys());
+
+      keys.forEach( key => {
+        if (key === 'rank') {
+          const value = response.get(key);
+          if (!isNaN(value)) {
+            this.rank = value;
+          }
+        }
+      });
+
+    }
+    if (!this.rank) {
+      this.rank = 1;
+    }
+  }
+
   async saveDisplayOptions() {
     this.spinner.start();
     const data = {};
@@ -170,6 +192,16 @@ export class BaseAuthService {
     data[key] = this.karma.toString();
     const answer = await this.widget.updateData(data);
 
+    this.spinner.stop();
+  }
+
+  async saveRank(rank: Number) {
+    const key = 'rank';
+    this.spinner.start();
+    const data = {};
+    this.rank = rank;
+    data[key] = this.rank.toString();
+    const answer = await this.widget.updateData(data);
     this.spinner.stop();
   }
 }
