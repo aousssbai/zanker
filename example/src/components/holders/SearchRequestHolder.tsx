@@ -22,7 +22,22 @@ export default class SearchRequestHolder extends AbstractHolder<Properties, Sear
         const result: Array<object> = [];
 
         this.props.model.tags.forEach((value, key) => {
-            result.push(<div key={key.toString()}>{key} => {value}</div>);
+            if(key == 'rank' && value < 2){
+                result.push(<div class='this-is-red' key={key.toString()}> <font color="red"> {key} => {value}</font></div>);
+            }
+            else{
+                if(key == 'rank' && value < 4){
+                    result.push(<div key={key.toString()}><font color="yellow"> {key} => {value}</font></div>);
+                } else{
+                    if(key == 'rank'){
+                        result.push(<div key={key.toString()}><font color="green"> {key} => {value}</font></div>);
+                    } else{
+                        result.push(<div key={key.toString()}> {key} => {value}</div>);
+                    }
+                    
+                }
+                
+            }
         });
 
         return result;
